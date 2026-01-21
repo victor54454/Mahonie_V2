@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planckeel Bike - Coach VTT & Préparation Physique</title>
+    <meta name="description" content="Coach VTT diplômé DEJEPS. Sorties encadrées, coaching technique, préparation physique et mécanique cycles.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/slider.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="photo/logo.png" alt="Logo Planckeel Bike">
+                </div>
+                <div class="logo-text">
+                    <h1>PLANCKEEL BIKE</h1>
+                    <span>Coach VTT & Préparation Physique</span>
+                </div>
+            </div>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="#home">Accueil</a>
+                <a href="#services">Services</a>
+                <a href="#about">À propos</a>
+                <a href="login.html">Login</a>
+                <a href="booking.html" class="btn-primary">Réserver</a>
+            </div>
+            
+            <div class="burger" id="burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg"></div>
+        <div class="container hero-container">
+            <div class="hero-badge">
+                <span class="badge-icon">🏆</span>
+                <span>DEJEPS VTT • BPJEPS APT</span>
+            </div>
+            
+            <h1 class="hero-title">
+                <span class="title-main">PLANCKEEL</span>
+                <span class="title-gradient">BIKE</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                Progressez en VTT avec un <span class="highlight">coach diplômé</span><br>
+                Sorties encadrées • Coaching technique • Préparation physique • Mécanique
+            </p>
+            
+            <div class="hero-buttons">
+                <a href="booking.html" class="btn btn-primary btn-large">
+                    <span>📅</span> Réserver une session
+                </a>
+                <a href="#services" class="btn btn-secondary btn-large">
+                    Découvrir les services
+                </a>
+            </div>
+            
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value">Diplômé</div>
+                    <div class="stat-label">DEJEPS VTT & BPJEPS APT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value">0+</div>
+                    <div class="stat-label">Riders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔧</div>
+                    <div class="stat-value">0+</div>
+                    <div class="stat-label">Interventions</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="scroll-indicator">
+            <span>Découvrir</span>
+            <div class="scroll-arrow">↓</div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Mes <span class="gradient-text">Services</span></h2>
+                <p class="section-subtitle">
+                    Du coaching technique à la préparation physique, en passant par la mécanique 
+                    et les sorties encadrées, je vous accompagne dans votre progression VTT.
+                </p>
+            </div>
+            
+            <div class="services-grid">
+                <!-- Service 1 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <div class="service-overlay"></div>
+                        <div class="service-price">35€</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Sortie VTT Découverte</h3>
+                        <p>Sortie encadrée de 2h pour découvrir le VTT et les fondamentaux. Parfait pour les débutants !</p>
+                        <div class="service-meta">
+                            <span class="service-duration">⏱️ 2h</span>
+                        </div>
+                        <a href="booking.html?service=decouverte" class="btn btn-primary">Réserver</a>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <div class="service-overlay"></div>
+                        <div class="service-price">50€</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Coaching Technique</h3>
+                        <p>Session individuelle pour améliorer votre technique : franchissements, virages, descentes.</p>
+                        <div class="service-meta">
+                            <span class="service-duration">⏱️ 1h30</span>
+                        </div>
+                        <a href="booking.html?service=coaching" class="btn btn-primary">Réserver</a>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <div class="service-overlay"></div>
+                        <div class="service-price">45€</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Préparation Physique</h3>
+                        <p>Programme personnalisé pour améliorer vos performances et votre endurance en VTT.</p>
+                        <div class="service-meta">
+                            <span class="service-duration">⏱️ 1h</span>
+                        </div>
+                        <a href="booking.html?service=physique" class="btn btn-primary">Réserver</a>
+                    </div>
+                </div>
+
+                <!-- Service 4 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <div class="service-overlay"></div>
+                        <div class="service-price">40€</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Mécanique Vélo</h3>
+                        <p>Entretien, réglages et optimisation de votre VTT. Freins, transmission, suspensions.</p>
+                        <div class="service-meta">
+                            <span class="service-duration">⏱️ 1h30</span>
+                        </div>
+                        <a href="booking.html?service=mecanique" class="btn btn-primary">Réserver</a>
+                    </div>
+                </div>
+
+                <!-- Service 5 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <div class="service-overlay"></div>
+                        <div class="service-price">55€</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Sortie VTT Enduro</h3>
+                        <p>Sortie engagée de 3h sur les meilleurs spots d'enduro. Niveau intermédiaire/confirmé.</p>
+                        <div class="service-meta">
+                            <span class="service-duration">⏱️ 3h</span>
+                        </div>
+                        <a href="booking.html?service=enduro" class="btn btn-primary">Réserver</a>
+                    </div>
+                </div>
+
+                <!-- Service 6 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <div class="service-overlay"></div>
+                        <div class="service-price">200€</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Stage Weekend</h3>
+                        <p>Stage intensif sur 2 jours : technique, physique et sorties encadrées.</p>
+                        <div class="service-meta">
+                            <span class="service-duration">⏱️ 2 jours</span>
+                        </div>
+                        <a href="booking.html?service=stage" class="btn btn-primary">Réserver</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="services-cta">
+                <div class="cta-card">
+                    <h3>Pas sûr du service qui vous convient ?</h3>
+                    <p>Contactez-moi pour discuter de vos objectifs et trouver le programme adapté.</p>
+                    <a href="mailto:merciervictor4@gmail.com" class="btn btn-secondary">Me contacter</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image">
+                    <div class="photo-slider">
+                        <div class="slider-container">
+                            <img src="photo/maho.jpeg" alt="Photo VTT Maho" class="slider-image active">
+                            <img src="photo/groupe.jpeg" alt="Photo VTT Groupe" class="slider-image">
+                            <img src="photo/course.jpeg" alt="Photo Course VTT" class="slider-image">
+                            <img src="photo/cascade.jpeg" alt="Photo Cascade VTT" class="slider-image">
+                            <img src="photo/style.jpeg" alt="Photo Style VTT" class="slider-image">
+                            <img src="photo/run.jpeg" alt="Photo Run VTT" class="slider-image">
+                            <img src="photo/run2.jpeg" alt="Photo Run2 VTT" class="slider-image">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-content">
+                    <h2 class="section-title">
+                        À propos de <span class="gradient-text">Planckeel Bike</span>
+                    </h2>
+                    <p class="about-lead">
+                        Moniteur Cycliste Français diplômé, je partage ma passion du VTT à travers 
+                        des sorties encadrées, du coaching technique et de la préparation physique adaptée.
+                    </p>
+
+                    <div class="about-text">
+                        <p>
+                            🏔️ <strong>Ma philosophie :</strong> Le VTT, c'est avant tout du plaisir, 
+                            du partage et de l'émotion. Mon objectif est de vous faire progresser dans 
+                            le fun et la bonne humeur.
+                        </p>
+                        <p>
+                            🎯 <strong>Mon approche :</strong> Sorties encadrées et sécurisées, coaching 
+                            technique personnalisé, entretien vélo, et suivi pour atteindre vos objectifs.
+                        </p>
+                    </div>
+
+                    <div class="about-features">
+                        <div class="feature-item">
+                            <div class="feature-icon">🏆</div>
+                            <div class="feature-text">
+                                <strong>Diplômes</strong>
+                                <span>DEJEPS VTT • BPJEPS APT</span>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-text">
+                                <strong>Expérience</strong>
+                                <span>10+ années de pratique</span>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">🎯</div>
+                            <div class="feature-text">
+                                <strong>Approche</strong>
+                                <span>Personnalisée & adaptée</span>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">❤️</div>
+                            <div class="feature-text">
+                                <strong>Passion</strong>
+                                <span>Partage & convivialité</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <div class="logo-icon">
+                    <img src="photo/logo.png" alt="Logo Planckeel Bike">
+                </div>
+                        <h3>PLANCKEEL BIKE</h3>
+                    </div>
+                    <p>
+                        Coach VTT diplômé DEJEPS et préparateur physique BPJEPS. 
+                        Passionné de VTT, je partage ma passion à travers des sorties 
+                        encadrées et du coaching personnalisé.
+                    </p>
+                    <div class="footer-badge">
+                        <span>🏆</span> DEJEPS VTT • BPJEPS APT
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#services">Sorties encadrées VTT</a></li>
+                        <li><a href="#services">Coaching technique</a></li>
+                        <li><a href="#services">Préparation physique</a></li>
+                        <li><a href="#services">Mécanique cycles</a></li>
+                        <li><a href="#services">Programme performance</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="contact-icon">📧</span>
+                            <a href="mailto:merciervictor4@gmail.com">merciervictor4@gmail.com</a>
+                        </li>
+                        <li>
+                            <span class="contact-icon">📱</span>
+                            <a href="tel:+33782568025">07 82 56 80 25</a>
+                        </li>
+                        <li>
+                            <span class="contact-icon">📍</span>
+                            <span>Sud de France</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Suivez-nous</h4>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/planckeel.bike/" class="social-link">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="footer-info-box">
+                        <p>💪 Rejoignez la communauté des riders passionnés !</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 Planckeel Bike. Tous droits réservés.</p>
+                <div class="footer-links">
+                    <a href="#">Mentions légales</a>
+                    <a href="#">Politique de confidentialité</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/slider.js"></script>
+</body>
+</html>

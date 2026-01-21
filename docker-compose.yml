@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    container_name: planckeel-bike-web
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./bookings:/var/www/html/bookings
+    restart: unless-stopped

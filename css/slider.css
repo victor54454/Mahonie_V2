@@ -1,0 +1,96 @@
+/* Styles pour le slider de photos */
+.photo-slider {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+}
+
+.slider-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+    z-index: 1;
+}
+
+.slider-image.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Animation de fondu plus fluide */
+.slider-image.fade-in {
+    opacity: 1;
+    z-index: 2;
+}
+
+.slider-image.fade-out {
+    opacity: 0;
+    z-index: 1;
+}
+
+/* Container principal simplifié */
+.about-image {
+    position: relative;
+    width: 100%;
+}
+
+/* Styles responsifs pour le slider */
+@media (max-width: 768px) {
+    .slider-container {
+        min-height: 300px;
+    }
+    
+    .photo-slider {
+        border-radius: 15px;
+    }
+    
+    .slider-image {
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slider-container {
+        min-height: 250px;
+    }
+    
+    .photo-slider {
+        border-radius: 12px;
+    }
+    
+    .slider-image {
+        border-radius: 12px;
+    }
+}
+
+/* Loading placeholder pour les images */
+.slider-image:not([src]) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slider-image:not([src])::before {
+    content: "📷";
+    font-size: 3rem;
+    color: white;
+    opacity: 0.7;
+}

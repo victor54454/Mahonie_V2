@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réservation - Planckeel Bike</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <div class="logo-icon">🚵</div>
+                    <div class="logo-text">
+                        <h1>PLANCKEEL BIKE</h1>
+                        <span>Coach VTT</span>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="index.html#services">Services</a>
+                <a href="index.html#about">À propos</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Booking Page -->
+    <section class="booking-page">
+        <div class="container">
+            <div class="booking-header">
+                <div class="booking-icon">📅</div>
+                <h1>Réservez votre <span class="gradient-text">session</span></h1>
+                <p>Choisissez votre service, la date et remplissez vos coordonnées. Vous recevrez une confirmation par email.</p>
+            </div>
+
+            <div class="booking-container">
+                <!-- Progress Steps -->
+                <div class="booking-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span>Service</span>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span>Date & Heure</span>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span>Coordonnées</span>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span>Confirmation</span>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <form id="bookingForm" class="booking-form" action="php/booking.php" method="POST">
+                    <!-- Step 1: Service Selection -->
+                    <div class="form-step active" data-step="1">
+                        <h2>Choisissez votre service</h2>
+                        <div class="services-selection">
+                            <label class="service-option">
+                                <input type="radio" name="service" value="Sortie VTT Découverte" data-price="35" data-duration="2h" required>
+                                <div class="service-option-card">
+                                    <h3>Sortie VTT Découverte</h3>
+                                    <p>Sortie encadrée de 2h pour débutants</p>
+                                    <div class="service-option-meta">
+                                        <span>⏱️ 2h</span>
+                                        <span class="price">35€</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="service-option">
+                                <input type="radio" name="service" value="Coaching Technique" data-price="50" data-duration="1h30">
+                                <div class="service-option-card">
+                                    <h3>Coaching Technique</h3>
+                                    <p>Session individuelle technique</p>
+                                    <div class="service-option-meta">
+                                        <span>⏱️ 1h30</span>
+                                        <span class="price">50€</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="service-option">
+                                <input type="radio" name="service" value="Préparation Physique" data-price="45" data-duration="1h">
+                                <div class="service-option-card">
+                                    <h3>Préparation Physique</h3>
+                                    <p>Programme personnalisé</p>
+                                    <div class="service-option-meta">
+                                        <span>⏱️ 1h</span>
+                                        <span class="price">45€</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="service-option">
+                                <input type="radio" name="service" value="Mécanique Vélo" data-price="40" data-duration="1h30">
+                                <div class="service-option-card">
+                                    <h3>Mécanique Vélo</h3>
+                                    <p>Entretien et réglages</p>
+                                    <div class="service-option-meta">
+                                        <span>⏱️ 1h30</span>
+                                        <span class="price">40€</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="service-option">
+                                <input type="radio" name="service" value="Sortie VTT Enduro" data-price="55" data-duration="3h">
+                                <div class="service-option-card">
+                                    <h3>Sortie VTT Enduro</h3>
+                                    <p>Sortie engagée 3h</p>
+                                    <div class="service-option-meta">
+                                        <span>⏱️ 3h</span>
+                                        <span class="price">55€</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="service-option">
+                                <input type="radio" name="service" value="Stage Weekend" data-price="200" data-duration="2 jours">
+                                <div class="service-option-card">
+                                    <h3>Stage Weekend</h3>
+                                    <p>Stage intensif 2 jours</p>
+                                    <div class="service-option-meta">
+                                        <span>⏱️ 2 jours</span>
+                                        <span class="price">200€</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-next">Suivant</button>
+                    </div>
+
+                    <!-- Step 2: Date & Time Selection -->
+                    <div class="form-step" data-step="2">
+                        <h2>Choisissez une date et un créneau</h2>
+                        <div class="date-time-selection">
+                            <div class="form-group">
+                                <label for="bookingDate">Date souhaitée</label>
+                                <input type="date" id="bookingDate" name="date" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Créneau horaire</label>
+                                <div class="time-slots">
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="08:00" required>
+                                        <span>08:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="09:00" required>
+                                        <span>09:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="10:00">
+                                        <span>10:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="11:00">
+                                        <span>11:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="14:00">
+                                        <span>14:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="15:00">
+                                        <span>15:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="16:00">
+                                        <span>16:00</span>
+                                    </label>
+                                    <label class="time-slot">
+                                        <input type="radio" name="time" value="17:00">
+                                        <span>17:00</span>
+                                    </label>
+                                </div>
+                                <p class="help-text">Disponibilités : Lundi, Mardi, Jeudi, Vendredi</p>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="button" class="btn btn-secondary btn-prev">Retour</button>
+                            <button type="button" class="btn btn-primary btn-next">Suivant</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Contact Information -->
+                    <div class="form-step" data-step="3">
+                        <h2>Vos coordonnées</h2>
+                        <div class="contact-form">
+                            <div class="form-group">
+                                <label for="name">Nom complet *</label>
+                                <input type="text" id="name" name="name" required placeholder="Votre nom">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email *</label>
+                                <input type="email" id="email" name="email" required placeholder="votre@email.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Téléphone *</label>
+                                <input type="tel" id="phone" name="phone" required placeholder="06 12 34 56 78">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="message">Message (optionnel)</label>
+                                <textarea id="message" name="message" rows="4" placeholder="Informations complémentaires, niveau, objectifs..."></textarea>
+                            </div>
+
+                            <!-- Récapitulatif -->
+                            <div class="booking-summary">
+                                <h3>Récapitulatif</h3>
+                                <div class="summary-item">
+                                    <span>Service :</span>
+                                    <strong id="summaryService">-</strong>
+                                </div>
+                                <div class="summary-item">
+                                    <span>Date :</span>
+                                    <strong id="summaryDate">-</strong>
+                                </div>
+                                <div class="summary-item">
+                                    <span>Heure :</span>
+                                    <strong id="summaryTime">-</strong>
+                                </div>
+                                <div class="summary-item">
+                                    <span>Durée :</span>
+                                    <strong id="summaryDuration">-</strong>
+                                </div>
+                                <div class="summary-item total">
+                                    <span>Prix :</span>
+                                    <strong id="summaryPrice">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="button" class="btn btn-secondary btn-prev">Retour</button>
+                            <button type="submit" class="btn btn-primary">Confirmer la réservation</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Confirmation -->
+                    <div class="form-step" data-step="4">
+                        <div class="confirmation-message">
+                            <div class="confirmation-icon">✅</div>
+                            <h2>Réservation confirmée !</h2>
+                            <p>Vous allez recevoir un email de confirmation avec tous les détails de votre réservation.</p>
+                            <p>À très bientôt sur les trails ! 🚵‍♂️</p>
+                            <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 Planckeel Bike. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/booking.js"></script>
+</body>
+</html>
