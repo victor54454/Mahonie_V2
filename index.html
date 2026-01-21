@@ -11,6 +11,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
+<script>
+// Afficher "Mon compte" si connecté
+const user = JSON.parse(localStorage.getItem('admin_user') || 'null');
+if (user) {
+    const navLinks = document.querySelector('.nav-links');
+    const loginLink = navLinks.querySelector('a[href="login.html"]');
+    const registerLink = navLinks.querySelector('a[href="register.html"]');
+    
+    if (loginLink) loginLink.style.display = 'none';
+    if (registerLink) registerLink.style.display = 'none';
+    
+    const accountLink = document.createElement('a');
+    accountLink.href = user.role === 'admin' ? 'admin.html' : 'account.html';
+    accountLink.textContent = user.role === 'admin' ? 'Admin' : 'Mon compte';
+    navLinks.insertBefore(accountLink, navLinks.querySelector('.btn-primary'));
+}
+</script>
 <body>
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
@@ -30,6 +47,7 @@
                 <a href="#services">Services</a>
                 <a href="#about">À propos</a>
                 <a href="login.html">Login</a>
+                <a href="register.html">Inscription</a>
                 <a href="booking.html" class="btn-primary">Réserver</a>
             </div>
             

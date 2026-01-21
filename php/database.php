@@ -71,19 +71,45 @@ class Database {
             )
         ");
         
+        // Table des tokens de réinitialisation de mot de passe
+        $this->db->exec("
+            CREATE TABLE IF NOT EXISTS password_resets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token TEXT UNIQUE NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        ");
+        
+        // Table des tokens de réinitialisation de mot de passe
+        $this->db->exec("
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token TEXT NOT NULL UNIQUE,
+                expires_at DATETIME NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        ");
+        
         // Créer un admin par défaut si n'existe pas
         $this->createDefaultAdmin();
     }
     
     private function createDefaultAdmin() {
-        $email = 'victor@test.fr';
+        require_once __DIR__ . '/admin_config.php';
+        
+        $email = ADMIN_EMAIL;
         
         $stmt = $this->db->prepare('SELECT id FROM users WHERE email = :email');
         $stmt->bindValue(':email', $email, SQLITE3_TEXT);
         $result = $stmt->execute();
         
         if (!$result->fetchArray()) {
-            $password = password_hash('Victor', PASSWORD_BCRYPT);
+            $password = password_hash(ADMIN_PASSWORD, PASSWORD_BCRYPT);
             
             $stmt = $this->db->prepare('
                 INSERT INTO users (email, password, nom, prenom, role)

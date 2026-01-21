@@ -1,1 +1,20 @@
+# Fichiers de configuration sensibles
+php/admin_config.php
 php/config.php
+
+# Base de données
+php/planckeel.db
+*.db
+
+# Fichiers de réservations
+bookings/
+
+# Logs
+*.log
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Docker
+.env

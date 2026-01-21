@@ -28,8 +28,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_user', JSON.stringify(data.user));
         
-        // Rediriger vers le panel admin
-        window.location.href = 'admin.html';
+        // Rediriger selon le rôle
+        if (data.user.role === 'admin') {
+            window.location.href = 'admin.html';
+        } else {
+            window.location.href = 'account.html';
+        }
         
     } catch (error) {
         errorMessage.textContent = error.message;

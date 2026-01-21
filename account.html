@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Compte - Planckeel Bike</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <div class="logo-icon">
+                        <img src="photo/logo.png" alt="Logo Planckeel Bike">
+                    </div>
+                    <div class="logo-text">
+                        <h1>PLANCKEEL BIKE</h1>
+                        <span>Coach VTT & Préparation Physique</span>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="index.html#services">Services</a>
+                <a href="index.html#about">À propos</a>
+                <a href="booking.html" class="btn-primary">Réserver</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="account-page" style="min-height: 100vh; background: var(--dark); padding: 100px 20px 60px;">
+        <div class="container" style="max-width: 1000px;">
+            <div class="account-header" style="margin-bottom: 40px;">
+                <h1 style="font-size: 36px; margin-bottom: 8px;">Mon Compte</h1>
+                <p style="color: var(--gray);">Gérez vos informations et vos réservations</p>
+            </div>
+
+            <div class="account-grid" style="display: grid; gap: 32px;">
+                <!-- Informations personnelles -->
+                <div class="account-card" style="background: var(--dark-secondary); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="font-size: 24px;">👤 Mes informations</h2>
+                        <button class="btn btn-secondary" id="logoutBtn">Déconnexion</button>
+                    </div>
+                    
+                    <div id="userInfo" class="user-info-grid" style="display: grid; gap: 16px;">
+                        <!-- Chargé dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Réservations -->
+                <div class="account-card" style="background: var(--dark-secondary); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px;">
+                    <h2 style="font-size: 24px; margin-bottom: 24px;">📅 Mes réservations</h2>
+                    
+                    <div id="reservationsList">
+                        <p style="color: var(--gray); text-align: center;">Chargement...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 Planckeel Bike. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/account.js"></script>
+</body>
+</html>
