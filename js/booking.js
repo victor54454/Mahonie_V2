@@ -35,8 +35,8 @@ if (bookingForm) {
 
     // Next button click
     nextButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            if (validateStep(currentStep)) {
+        button.addEventListener('click', async () => {
+            if (await validateStep(currentStep)) {
                 if (currentStep < totalSteps) {
                     showStep(currentStep + 1);
                 }
@@ -54,38 +54,59 @@ if (bookingForm) {
     });
 
     // Validate current step
-    function validateStep(step) {
+    async function validateStep(step) {
         const currentFormStep = document.querySelector(`.form-step[data-step="${step}"]`);
-        const inputs = currentFormStep.querySelectorAll('input[required], select[required]');
+        const requiredInputs = currentFormStep.querySelectorAll('[required]');
         
         let isValid = true;
-        inputs.forEach(input => {
-            if (!input.value || (input.type === 'radio' && !currentFormStep.querySelector('input[type="radio"]:checked'))) {
+        
+        requiredInputs.forEach(input => {
+            if (!input.value || (input.type === 'radio' && !document.querySelector(`input[name="${input.name}"]:checked`))) {
                 isValid = false;
-                input.parentElement.style.border = '2px solid #FF6B2C';
-                setTimeout(() => {
-                    input.parentElement.style.border = '';
-                }, 1000);
+                input.classList.add('error');
+            } else {
+                input.classList.remove('error');
             }
         });
         
         if (!isValid) {
-            // Show error message
-            const errorMsg = document.createElement('div');
-            errorMsg.style.cssText = 'color: #FF6B2C; text-align: center; margin-top: 16px; animation: fadeInUp 0.3s ease-out;';
-            errorMsg.textContent = 'Veuillez remplir tous les champs requis';
+            alert('Veuillez remplir tous les champs obligatoires.');
+            return false;
+        }
+
+        // Vérifier la disponibilité pour l'étape 2 (date et heure)
+        if (step === 2) {
+            const date = document.getElementById('bookingDate').value;
+            const time = document.querySelector('input[name="time"]:checked')?.value;
             
-            // Remove existing error message if any
-            const existingError = currentFormStep.querySelector('.error-message');
-            if (existingError) existingError.remove();
-            
-            errorMsg.className = 'error-message';
-            currentFormStep.appendChild(errorMsg);
-            
-            setTimeout(() => errorMsg.remove(), 3000);
+            if (date && time) {
+                const available = await checkAvailability(date, time);
+                if (!available) {
+                    return false;
+                }
+            }
         }
         
-        return isValid;
+        return true;
+    }
+
+    // Vérifier la disponibilité via l'API
+    async function checkAvailability(date, time) {
+        try {
+            const response = await fetch(`php/admin_api.php?action=check-availability&date=${date}&time=${time}`);
+            const data = await response.json();
+            
+            if (!data.available) {
+                alert(`❌ Ce créneau n'est pas disponible : ${data.reason || 'Fermé'}`);
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Erreur vérification disponibilité:', error);
+            // En cas d'erreur, on laisse passer (pas optimal mais évite de bloquer)
+            return true;
+        }
     }
 
     // Update summary
@@ -112,10 +133,19 @@ if (bookingForm) {
     }
 
     // Form submission
-    bookingForm.addEventListener('submit', function(e) {
+    bookingForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        if (!validateStep(3)) {
+        if (!await validateStep(3)) {
+            return;
+        }
+
+        // Vérifier une dernière fois la disponibilité
+        const date = document.getElementById('bookingDate').value;
+        const time = document.querySelector('input[name="time"]:checked')?.value;
+        
+        const available = await checkAvailability(date, time);
+        if (!available) {
             return;
         }
 
@@ -150,9 +180,6 @@ if (bookingForm) {
             // Even if there's an error, show confirmation for demo
             // In production, you would handle this properly
             showStep(4);
-            // alert('Une erreur est survenue. Veuillez réessayer.');
-            // submitButton.innerHTML = originalText;
-            // submitButton.disabled = false;
         });
     });
 
@@ -185,7 +212,7 @@ document.querySelectorAll('.service-option').forEach(option => {
 });
 
 // ========================================
-// Date Input - Disable weekends and past dates  getDay() retourne un nombre : 0=Dimanche, 1=Lundi, 2=Mardi, 3=Mercredi, 4=Jeudi, 5=Vendredi, 6=Samedi
+// Date Input - Disable weekends and past dates
 // ========================================
 const dateInput = document.getElementById('bookingDate');
 if (dateInput) {

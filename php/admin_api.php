@@ -72,6 +72,40 @@ function isAdmin($user) {
 
 // ==================== ROUTES ====================
 
+// VÉRIFIER DISPONIBILITÉ (PUBLIC)
+if ($path === 'check-availability' && $method === 'GET') {
+    $date = $_GET['date'] ?? '';
+    $time = $_GET['time'] ?? '';
+    
+    // Vérifier si le jour complet est fermé
+    $stmt = $db->prepare('SELECT * FROM disponibilites WHERE date = :date AND time_slot IS NULL');
+    $stmt->bindValue(':date', $date, SQLITE3_TEXT);
+    $result = $stmt->execute();
+    $dayClosedRow = $result->fetchArray(SQLITE3_ASSOC);
+    
+    if ($dayClosedRow) {
+        echo json_encode(['available' => false, 'reason' => 'Jour fermé']);
+        exit;
+    }
+    
+    // Vérifier si le créneau spécifique est fermé
+    if (!empty($time)) {
+        $stmt = $db->prepare('SELECT * FROM disponibilites WHERE date = :date AND time_slot = :time');
+        $stmt->bindValue(':date', $date, SQLITE3_TEXT);
+        $stmt->bindValue(':time', $time, SQLITE3_TEXT);
+        $result = $stmt->execute();
+        $slotClosedRow = $result->fetchArray(SQLITE3_ASSOC);
+        
+        if ($slotClosedRow) {
+            echo json_encode(['available' => false, 'reason' => 'Créneau fermé']);
+            exit;
+        }
+    }
+    
+    echo json_encode(['available' => true]);
+    exit;
+}
+
 // LOGIN
 if ($path === 'login' && $method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
