@@ -1,0 +1,321 @@
+/* ==================== NOUVELLES CLASSES POUR LES RÉSERVATIONS ==================== */
+
+.reservations-container {
+    padding: 20px;
+}
+
+.reservations-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.reservation-card {
+    background: var(--dark-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.reservation-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.reservation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reservation-info h3 {
+    font-size: 20px;
+    color: var(--white);
+    margin-bottom: 8px;
+}
+
+.reservation-client {
+    color: var(--gray-light);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.reservation-contact {
+    display: block;
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 4px;
+}
+
+.reservation-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-confirmee {
+    background: rgba(127, 217, 75, 0.2);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.status-en_attente {
+    background: rgba(255, 211, 61, 0.2);
+    color: var(--accent-yellow);
+    border: 1px solid var(--accent-yellow);
+}
+
+.status-annulee {
+    background: rgba(255, 68, 68, 0.2);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.reservation-details {
+    margin: 16px 0;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--gray);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--white);
+    font-weight: 600;
+    text-align: right;
+}
+
+.reservation-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 12px;
+}
+
+.btn-success {
+    background: var(--success);
+    color: var(--white);
+    border: none;
+}
+
+.btn-success:hover {
+    background: #6BC943;
+    transform: translateY(-1px);
+}
+
+.section-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.filter-controls .form-control {
+    background: var(--dark-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--white);
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.filter-controls .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+    .reservation-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .detail-value {
+        text-align: left;
+    }
+    
+    .reservation-actions {
+        flex-wrap: wrap;
+    }
+    
+    .section-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-controls .form-control {
+        width: 100%;
+    }
+}
+
+/* ==================== ÉTATS ET ANIMATIONS ==================== */
+
+.reservation-card.updating {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.reservation-card.updating::after {
+    content: '⏳ Mise à jour...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--white);
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.status-badge {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ==================== AMÉLIORATIONS EXISTANTES ==================== */
+
+.section-header {
+    margin-bottom: 24px;
+}
+
+.section-counter {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--gray);
+    padding: 60px 20px;
+    background: var(--dark-tertiary);
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--gray-light);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ==================== CORRECTIONS ET AJUSTEMENTS ==================== */
+
+.admin-content {
+    padding: 0;
+}
+
+.content-section {
+    display: none;
+    padding: 24px;
+}
+
+.content-section.active {
+    display: block;
+}
+
+.modal-large .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.participant-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.participant-details .detail-card {
+    background: var(--dark-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.participant-details .detail-card h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

@@ -1,41 +1,39 @@
 <?php
 // ========================================
-// Configuration
+// Booking Handler - Version corrigée avec base SQLite
 // ========================================
+
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-
-// Email configuration
 require_once 'config.php';
-
-// Import PHPMailer classes
+require_once 'database.php'; // ← AJOUT : Base SQLite
 require_once 'PHPMailer-7.0.2/src/Exception.php';
 require_once 'PHPMailer-7.0.2/src/PHPMailer.php';
 require_once 'PHPMailer-7.0.2/src/SMTP.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-// ========================================
-// Process Booking Form
-// ========================================
+// Only handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
+
+    // ========================================
+    // Collect and sanitize form data
+    // ========================================
     $service = htmlspecialchars($_POST['service'] ?? '');
     $date = htmlspecialchars($_POST['date'] ?? '');
     $time = htmlspecialchars($_POST['time'] ?? '');
+    $duration = htmlspecialchars($_POST['duration'] ?? '');
+    $price = htmlspecialchars($_POST['price'] ?? '');
     $name = htmlspecialchars($_POST['name'] ?? '');
     $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
     $phone = htmlspecialchars($_POST['phone'] ?? '');
     $message = htmlspecialchars($_POST['message'] ?? '');
-
-    // Validate required fields
+    
+    // Basic validation
     if (empty($service) || empty($date) || empty($time) || empty($name) || empty($email) || empty($phone)) {
         echo json_encode([
             'success' => false,
-            'message' => 'Tous les champs requis doivent être remplis.'
+            'message' => 'Tous les champs obligatoires doivent être remplis.'
         ]);
         exit;
     }
@@ -53,6 +51,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dateObj = DateTime::createFromFormat('Y-m-d', $date);
     $formattedDate = $dateObj ? $dateObj->format('d/m/Y') : $date;
     $dayName = $dateObj ? strftime('%A', $dateObj->getTimestamp()) : '';
+
+    // ========================================
+    // NOUVEAU : Sauvegarder dans la base SQLite
+    // ========================================
+    $database = new Database();
+    $db = $database->getConnection();
+    $reservation_id = null;
+    
+    try {
+        // Chercher l'utilisateur par email
+        $stmt = $db->prepare('SELECT id FROM users WHERE email = :email');
+        $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+        $result = $stmt->execute();
+        $user = $result->fetchArray(SQLITE3_ASSOC);
+        
+        $user_id = null;
+        if ($user) {
+            $user_id = $user['id'];
+        } else {
+            // Créer un utilisateur temporaire avec les infos de la réservation
+            $nameParts = explode(' ', trim($name), 2);
+            $prenom = $nameParts[0];
+            $nom = isset($nameParts[1]) ? $nameParts[1] : '';
+            
+            $stmt = $db->prepare('
+                INSERT INTO users (email, password, nom, prenom, telephone, role)
+                VALUES (:email, :password, :nom, :prenom, :telephone, "client")
+            ');
+            $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+            $stmt->bindValue(':password', password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT), SQLITE3_TEXT); // Mot de passe temporaire
+            $stmt->bindValue(':nom', $nom, SQLITE3_TEXT);
+            $stmt->bindValue(':prenom', $prenom, SQLITE3_TEXT);
+            $stmt->bindValue(':telephone', $phone, SQLITE3_TEXT);
+            $stmt->execute();
+            
+            $user_id = $db->lastInsertRowID();
+        }
+        
+        // Insérer la réservation dans la base
+        $stmt = $db->prepare('
+            INSERT INTO reservations (user_id, service, date, time, duration, price, status)
+            VALUES (:user_id, :service, :date, :time, :duration, :price, :status)
+        ');
+        $stmt->bindValue(':user_id', $user_id, SQLITE3_INTEGER);
+        $stmt->bindValue(':service', $service, SQLITE3_TEXT);
+        $stmt->bindValue(':date', $date, SQLITE3_TEXT); // Format Y-m-d pour la base
+        $stmt->bindValue(':time', $time, SQLITE3_TEXT);
+        $stmt->bindValue(':duration', $duration, SQLITE3_TEXT);
+        $stmt->bindValue(':price', $price, SQLITE3_TEXT);
+        $stmt->bindValue(':status', 'en_attente', SQLITE3_TEXT); // Statut par défaut
+        $stmt->execute();
+        
+        $reservation_id = $db->lastInsertRowID();
+        
+    } catch (Exception $e) {
+        error_log("Erreur sauvegarde base de données : " . $e->getMessage());
+        // On continue même si la sauvegarde base échoue
+    }
 
     // ========================================
     // Email HTML Templates
@@ -75,17 +131,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .label { font-weight: bold; color: #FF6B2C; }
             .footer { text-align: center; margin-top: 30px; padding: 20px; color: #666; font-size: 14px; }
             .logo { font-size: 28px; font-weight: bold; }
+            .status { background: #FFF3CD; border: 1px solid #FFEAA7; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; }
         </style>
     </head>
     <body>
         <div class='container'>
             <div class='header'>
                 <div class='logo'>🚵 PLANCKEEL BIKE</div>
-                <h2>Réservation confirmée !</h2>
+                <h2>Demande de réservation reçue !</h2>
             </div>
             <div class='content'>
                 <p>Bonjour $name,</p>
-                <p>Votre réservation a bien été enregistrée. Voici les détails :</p>
+                
+                <div class='status'>
+                    <strong>⏳ Statut : EN ATTENTE DE CONFIRMATION</strong><br>
+                    Nous allons examiner votre demande et vous recontacter rapidement pour la confirmer.
+                </div>
+                
+                <p>Voici les détails de votre demande de réservation :</p>
                 
                 <div class='details'>
                     <div class='detail-row'>
@@ -99,6 +162,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class='detail-row'>
                         <span class='label'>Heure :</span>
                         <span>$time</span>
+                    </div>
+                    <div class='detail-row'>
+                        <span class='label'>Durée :</span>
+                        <span>$duration</span>
+                    </div>
+                    <div class='detail-row'>
+                        <span class='label'>Prix :</span>
+                        <span>$price</span>
                     </div>
                 </div>
 
@@ -120,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ";
 
     // Email to Admin
-    $adminSubject = "🔔 Nouvelle réservation - $service";
+    $adminSubject = "🔔 Nouvelle demande de réservation - $service";
     $adminMessage = "
     <!DOCTYPE html>
     <html>
@@ -135,19 +206,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .detail-row { margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
             .label { font-weight: bold; color: #FF6B2C; display: inline-block; width: 150px; }
             .urgent { background: #FFE5E5; border-left: 4px solid #FF0000; padding: 15px; margin: 15px 0; }
+            .admin-link { background: #FF6B2C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 15px 0; }
         </style>
     </head>
     <body>
         <div class='container'>
             <div class='header'>
-                <h2>🔔 Nouvelle Réservation</h2>
+                <h2>🔔 Nouvelle Demande de Réservation</h2>
             </div>
             <div class='content'>
                 <div class='urgent'>
-                    <strong>📞 ACTION REQUISE :</strong> Contactez le client pour confirmer la réservation !
+                    <strong>📞 ACTION REQUISE :</strong> Nouvelle demande à traiter dans l'interface admin !
                 </div>
                 
-                <h3>Détails de la réservation</h3>
+                <p>Une nouvelle demande de réservation vient d'être reçue.</p>
+                
+                <a href='http://localhost:8080/admin.html' class='admin-link'>🎛️ Gérer dans l'interface admin</a>
+                
+                <h3>Détails de la demande</h3>
                 
                 <div class='details'>
                     <div class='detail-row'>
@@ -174,13 +250,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span class='label'>Heure :</span>
                         <span><strong>$time</strong></span>
                     </div>
+                    <div class='detail-row'>
+                        <span class='label'>Durée :</span>
+                        <span><strong>$duration</strong></span>
+                    </div>
+                    <div class='detail-row'>
+                        <span class='label'>Prix :</span>
+                        <span><strong>$price</strong></span>
+                    </div>
                     " . (!empty($message) ? "
                     <div class='detail-row'>
                         <span class='label'>Message :</span>
                         <span style='font-style: italic;'>$message</span>
                     </div>
                     " : "") . "
+                    " . ($reservation_id ? "
+                    <div class='detail-row'>
+                        <span class='label'>Réservation ID :</span>
+                        <span><strong>#$reservation_id</strong></span>
+                    </div>
+                    " : "") . "
                 </div>
+                
+                <p><strong>👆 Connectez-vous à l'interface admin pour confirmer ou annuler cette réservation.</strong></p>
             </div>
         </div>
     </body>
@@ -261,19 +353,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ========================================
-    // Save to file (backup)
+    // Save to file (backup) - OPTIONNEL
     // ========================================
     $bookingData = [
+        'reservation_id' => $reservation_id,
         'date_submission' => date('Y-m-d H:i:s'),
         'service' => $service,
         'date' => $formattedDate,
         'time' => $time,
+        'duration' => $duration,
+        'price' => $price,
         'name' => $name,
         'email' => $email,
         'phone' => $phone,
         'message' => $message,
         'client_email_sent' => $clientSent,
-        'admin_email_sent' => $adminSent
+        'admin_email_sent' => $adminSent,
+        'saved_to_database' => ($reservation_id !== null)
     ];
 
     // Create bookings directory if it doesn't exist
@@ -281,7 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mkdir('../bookings', 0755, true);
     }
 
-    // Save to JSON file
+    // Save to JSON file (backup)
     $filename = '../bookings/booking_' . date('Ymd_His') . '.json';
     file_put_contents($filename, json_encode($bookingData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
@@ -290,9 +386,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ========================================
     echo json_encode([
         'success' => true,
-        'message' => 'Réservation enregistrée avec succès !',
+        'message' => 'Demande de réservation envoyée avec succès ! Vous recevrez une confirmation par email une fois que nous aurons validé votre réservation.',
+        'reservation_id' => $reservation_id,
         'client_email_sent' => $clientSent,
         'admin_email_sent' => $adminSent,
+        'saved_to_database' => ($reservation_id !== null),
         'debug_info' => [
             'smtp_host' => SMTP_HOST,
             'smtp_user' => SMTP_USER,

@@ -38,7 +38,7 @@ class Database {
                 time TEXT NOT NULL,
                 duration TEXT NOT NULL,
                 price TEXT NOT NULL,
-                status TEXT DEFAULT 'confirmee',
+                status TEXT DEFAULT 'en_attente',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
@@ -102,14 +102,17 @@ class Database {
     private function createDefaultAdmin() {
         require_once __DIR__ . '/admin_config.php';
         
-        $email = ADMIN_EMAIL;
+        // ========================================
+        // CORRECTION : Utiliser LOGIN_ADMIN_EMAIL au lieu de ADMIN_EMAIL
+        // ========================================
+        $email = LOGIN_ADMIN_EMAIL;
         
         $stmt = $this->db->prepare('SELECT id FROM users WHERE email = :email');
         $stmt->bindValue(':email', $email, SQLITE3_TEXT);
         $result = $stmt->execute();
         
         if (!$result->fetchArray()) {
-            $password = password_hash(ADMIN_PASSWORD, PASSWORD_BCRYPT);
+            $password = password_hash(LOGIN_ADMIN_PASSWORD, PASSWORD_BCRYPT);
             
             $stmt = $this->db->prepare('
                 INSERT INTO users (email, password, nom, prenom, role)

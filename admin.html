@@ -27,7 +27,12 @@
             </div>
 
             <nav class="sidebar-menu">
-                <a href="#planning" class="menu-item active" data-section="planning">
+                <!-- AJOUT : Section Réservations -->
+                <a href="#reservations" class="menu-item active" data-section="reservations">
+                    <span class="menu-icon">📋</span>
+                    <span class="menu-label">Réservations</span>
+                </a>
+                <a href="#planning" class="menu-item" data-section="planning">
                     <span class="menu-icon">📅</span>
                     <span class="menu-label">Planning</span>
                 </a>
@@ -54,7 +59,7 @@
         <!-- Contenu principal -->
         <main class="admin-main">
             <div class="admin-header">
-                <h1 id="pageTitle">Planning</h1>
+                <h1 id="pageTitle">Réservations</h1>
                 <div class="header-actions">
                     <button class="btn btn-secondary" onclick="window.location.href='index.html'">
                         🏠 Voir le site
@@ -63,8 +68,34 @@
             </div>
 
             <div class="admin-content">
+                <!-- NOUVEAU : Section Réservations -->
+                <section id="reservations-section" class="content-section active">
+                    <div class="section-header">
+                        <div class="section-controls">
+                            <div class="filter-controls">
+                                <select id="statusFilter" class="form-control" style="width: 200px;">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="confirmee">Confirmées</option>
+                                    <option value="en_attente">En attente</option>
+                                    <option value="annulee">Annulées</option>
+                                </select>
+                                <input type="date" id="dateFilter" class="form-control" style="width: 160px;">
+                            </div>
+                            <button class="btn btn-primary" id="refreshReservations">🔄 Actualiser</button>
+                        </div>
+                    </div>
+
+                    <div class="reservations-container">
+                        <div id="reservationsList" class="reservations-grid">
+                            <div style="text-align: center; color: var(--gray); padding: 40px;">
+                                Chargement des réservations...
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Section Planning -->
-                <section id="planning-section" class="content-section active">
+                <section id="planning-section" class="content-section">
                     <div class="section-controls">
                         <div class="month-navigation">
                             <button class="btn btn-secondary" id="prevMonth">← Mois précédent</button>
@@ -90,109 +121,80 @@
                 <!-- Section Participants -->
                 <section id="participants-section" class="content-section">
                     <div class="section-controls">
-                        <div class="search-bar">
-                            <input type="text" id="searchParticipants" placeholder="🔍 Rechercher un participant...">
-                        </div>
+                        <input type="text" id="searchParticipants" placeholder="Rechercher un participant..." class="form-control" style="max-width: 300px;">
+                        <span id="participantCount" class="section-counter"></span>
                     </div>
 
-                    <div class="participants-grid" id="participantsList"></div>
-
-                    <!-- Modal Détails Participant -->
-                    <div id="participantModal" class="modal" style="display: none;">
-                        <div class="modal-content modal-large">
-                            <div class="modal-header">
-                                <h2 id="modalParticipantName">Participant</h2>
-                                <button class="modal-close" onclick="closeParticipantModal()">✕</button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="participant-details">
-                                    <div class="detail-card">
-                                        <h3>📧 Informations</h3>
-                                        <div id="participantInfo"></div>
-                                    </div>
-                                    
-                                    <div class="detail-card">
-                                        <h3>📅 Historique des réservations</h3>
-                                        <div id="participantReservations"></div>
-                                    </div>
-                                    
-                                    <div class="detail-card">
-                                        <h3>📝 Notes et observations</h3>
-                                        <button class="btn btn-primary" onclick="showAddNoteForm()">
-                                            ➕ Ajouter une note
-                                        </button>
-                                        <div id="addNoteForm" style="display: none; margin-top: 20px;">
-                                            <div id="noteEditor"></div>
-                                            <div style="margin-top: 10px; display: flex; gap: 10px;">
-                                                <button class="btn btn-primary" onclick="saveNote()">💾 Enregistrer</button>
-                                                <button class="btn btn-secondary" onclick="hideAddNoteForm()">❌ Annuler</button>
-                                            </div>
-                                        </div>
-                                        <div id="participantNotes" style="margin-top: 20px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="participants-container">
+                        <div id="participantsList" class="participants-grid"></div>
                     </div>
                 </section>
-            </div>
-
-            <!-- Modal Fermer un jour -->
-            <div id="closeDayModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Fermer un jour</h2>
-                        <button class="modal-close" onclick="closeModal('closeDayModal')">✕</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Date à fermer</label>
-                            <input type="date" id="closeDayDate" class="form-control">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="closeModal('closeDayModal')">Annuler</button>
-                        <button class="btn btn-primary" onclick="confirmCloseDay()">Fermer ce jour</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Fermer un créneau -->
-            <div id="closeSlotModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Fermer un créneau</h2>
-                        <button class="modal-close" onclick="closeModal('closeSlotModal')">✕</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input type="date" id="closeSlotDate" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Créneau horaire</label>
-                            <select id="closeSlotTime" class="form-control">
-                                <option value="08:00">08:00</option>
-                                <option value="09:00">09:00</option>
-                                <option value="10:00">10:00</option>
-                                <option value="11:00">11:00</option>
-                                <option value="14:00">14:00</option>
-                                <option value="15:00">15:00</option>
-                                <option value="16:00">16:00</option>
-                                <option value="17:00">17:00</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="closeModal('closeSlotModal')">Annuler</button>
-                        <button class="btn btn-primary" onclick="confirmCloseSlot()">Fermer ce créneau</button>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
 
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <!-- Modal pour les détails de réservation -->
+    <div id="reservationModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Détails de la réservation</h2>
+                <button class="modal-close" onclick="closeModal('reservationModal')">✕</button>
+            </div>
+            <div class="modal-body" id="reservationModalContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('reservationModal')">Fermer</button>
+                <button class="btn btn-danger" id="cancelReservationBtn" style="display:none;">Annuler la réservation</button>
+                <button class="btn btn-success" id="confirmReservationBtn" style="display:none;">Confirmer la réservation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autres modals existantes... -->
+    <div id="closeDayModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Fermer un jour</h2>
+                <button class="modal-close" onclick="closeModal('closeDayModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Sélectionnez la date :</label>
+                    <input type="date" id="closeDayDate" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('closeDayModal')">Annuler</button>
+                <button class="btn btn-danger" id="confirmCloseDay">Fermer le jour</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="closeSlotModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Fermer un créneau</h2>
+                <button class="modal-close" onclick="closeModal('closeSlotModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Date :</label>
+                    <input type="date" id="closeSlotDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Heure :</label>
+                    <input type="time" id="closeSlotTime" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('closeSlotModal')">Annuler</button>
+                <button class="btn btn-danger" id="confirmCloseSlot">Fermer le créneau</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>
