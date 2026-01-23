@@ -1,6 +1,6 @@
 <?php
 // ========================================
-// API Admin - Version COMPLÈTE avec toutes les routes
+// API Admin - Version COMPLÈTE avec TOUTES les routes + corrections
 // ========================================
 
 header('Content-Type: application/json; charset=utf-8');
@@ -16,6 +16,9 @@ require_once 'PHPMailer-7.0.2/src/SMTP.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
+// CORRECTION TIMEZONE - AJOUT
+date_default_timezone_set('Europe/Paris');
 
 // Initialiser la base de données
 $database = new Database();
@@ -72,7 +75,7 @@ function isAdmin($user) {
 
 // ==================== ROUTES PUBLIQUES ====================
 
-// VÉRIFIER DISPONIBILITÉ (PUBLIC) - ROUTE MANQUANTE !
+// VÉRIFIER DISPONIBILITÉ (PUBLIC) - ROUTE ESSENTIELLE !
 if ($path === 'check-availability' && $method === 'GET') {
     $date = $_GET['date'] ?? '';
     $time = $_GET['time'] ?? '';
@@ -293,28 +296,54 @@ if ($path === 'verify' && $method === 'GET') {
     exit;
 }
 
-// ==================== RÉSERVATIONS ====================
+// ==================== RÉSERVATIONS - VERSION CORRIGÉE ====================
 
-// GET TOUTES LES RÉSERVATIONS (ADMIN)
+// GET TOUTES LES RÉSERVATIONS (ADMIN) - AVEC DONNÉES COMPLÈTES
 if ($path === 'reservations' && $method === 'GET') {
     $user = verifyToken();
     isAdmin($user);
     
-    $query = "
-        SELECT r.*, u.nom, u.prenom, u.email, u.telephone
-        FROM reservations r
-        LEFT JOIN users u ON r.user_id = u.id
-        ORDER BY r.date DESC, r.time DESC
-    ";
-    
-    $result = $db->query($query);
-    $reservations = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $reservations[] = $row;
+    try {
+        $query = "
+            SELECT r.*, 
+                   u.nom, u.prenom, u.email, u.telephone,
+                   datetime(r.created_at, '+1 hour') as created_at_local,
+                   CASE 
+                       WHEN r.status = 'confirmee' THEN '✅ Confirmée'
+                       WHEN r.status = 'en_attente' THEN '⏳ En attente'  
+                       WHEN r.status = 'annulee' THEN '❌ Annulée'
+                       ELSE r.status
+                   END as status_text
+            FROM reservations r
+            LEFT JOIN users u ON r.user_id = u.id
+            ORDER BY r.created_at DESC
+        ";
+        
+        $result = $db->query($query);
+        $reservations = [];
+        
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            // Corriger les données manquantes
+            if (empty($row['duration'])) $row['duration'] = 'Non spécifiée';
+            if (empty($row['price'])) $row['price'] = 'Non spécifié';
+            
+            // Formater les dates et heures correctement  
+            $row['date_formatted'] = date('l j F Y', strtotime($row['date']));
+            $row['time_formatted'] = date('H:i', strtotime($row['time']));
+            $row['created_at_formatted'] = date('j/m/Y H:i', strtotime($row['created_at_local']));
+            
+            $reservations[] = $row;
+        }
+        
+        echo json_encode($reservations);
+        exit;
+        
+    } catch (Exception $e) {
+        error_log("RESERVATIONS ERROR: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Erreur serveur : ' . $e->getMessage()]);
+        exit;
     }
-    
-    echo json_encode($reservations);
-    exit;
 }
 
 // GET RÉSERVATIONS D'UN UTILISATEUR
@@ -560,83 +589,138 @@ if ($path === 'disponibilites/delete' && $method === 'DELETE') {
     exit;
 }
 
-// ==================== PARTICIPANTS (ADMIN) ====================
+// ==================== PARTICIPANTS - VERSION CORRIGÉE COMPLÈTE ====================
 
-// GET PARTICIPANTS
+// GET PARTICIPANTS - AVEC DONNÉES COMPLÈTES
 if ($path === 'participants' && $method === 'GET') {
     $user = verifyToken();
     isAdmin($user);
     
-    $query = "
-        SELECT u.*, 
-               COUNT(r.id) as total_reservations,
-               MAX(r.date) as derniere_reservation
-        FROM users u
-        LEFT JOIN reservations r ON u.id = r.user_id
-        WHERE u.role = 'client'
-        GROUP BY u.id
-        ORDER BY u.created_at DESC
-    ";
-    
-    $result = $db->query($query);
-    $participants = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $participants[] = $row;
+    try {
+        $query = "
+            SELECT u.*, 
+                   COUNT(DISTINCT r.id) as total_reservations,
+                   MAX(r.date) as derniere_reservation,
+                   datetime(u.created_at, '+1 hour') as created_at_local
+            FROM users u
+            LEFT JOIN reservations r ON u.id = r.user_id
+            WHERE u.role = 'client'
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        ";
+        
+        $result = $db->query($query);
+        $participants = [];
+        
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            // Formater les dates
+            if ($row['derniere_reservation']) {
+                $row['derniere_reservation_formatted'] = date('j/m/Y', strtotime($row['derniere_reservation']));
+            }
+            $row['created_at_formatted'] = date('j/m/Y', strtotime($row['created_at_local']));
+            
+            $participants[] = $row;
+        }
+        
+        echo json_encode($participants);
+        exit;
+        
+    } catch (Exception $e) {
+        error_log("PARTICIPANTS ERROR: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Erreur serveur : ' . $e->getMessage()]);
+        exit;
     }
-    
-    echo json_encode($participants);
-    exit;
 }
 
-// GET PARTICIPANT DETAILS
+// GET PARTICIPANT DETAILS - VERSION CORRIGÉE COMPLÈTE
 if ($path === 'participants/details' && $method === 'GET') {
     $user = verifyToken();
     isAdmin($user);
     
     $id = $_GET['id'] ?? 0;
     
-    // Récupérer l'utilisateur
-    $stmt = $db->prepare('SELECT * FROM users WHERE id = :id AND role = "client"');
-    $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-    $result = $stmt->execute();
-    $participant = $result->fetchArray(SQLITE3_ASSOC);
-    
-    if (!$participant) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Participant non trouvé']);
+    try {
+        // Récupérer l'utilisateur
+        $stmt = $db->prepare('SELECT * FROM users WHERE id = :id AND role = "client"');
+        $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+        $result = $stmt->execute();
+        $participant = $result->fetchArray(SQLITE3_ASSOC);
+        
+        if (!$participant) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Participant non trouvé']);
+            exit;
+        }
+        
+        // Récupérer les réservations avec TOUTES les données
+        $query = "
+            SELECT r.*, 
+                   datetime(r.created_at, '+1 hour') as created_at_local,
+                   CASE 
+                       WHEN r.status = 'confirmee' THEN '✅ Confirmée'
+                       WHEN r.status = 'en_attente' THEN '⏳ En attente'  
+                       WHEN r.status = 'annulee' THEN '❌ Annulée'
+                       ELSE r.status
+                   END as status_text
+            FROM reservations r 
+            WHERE r.user_id = :id 
+            ORDER BY r.date DESC, r.time DESC
+        ";
+        
+        $stmt = $db->prepare($query);
+        $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+        $result = $stmt->execute();
+        
+        $reservations = [];
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            // Corriger les données manquantes
+            if (empty($row['duration'])) $row['duration'] = 'Non spécifiée';
+            if (empty($row['price'])) $row['price'] = 'Non spécifié';
+            
+            // Formater la date et l'heure correctement
+            $row['date_formatted'] = date('l j F Y', strtotime($row['date']));
+            $row['time_formatted'] = date('H:i', strtotime($row['time']));
+            
+            $reservations[] = $row;
+        }
+        
+        // Récupérer les notes
+        $query = "
+            SELECT n.*, 
+                   u.nom, u.prenom,
+                   datetime(n.created_at, '+1 hour') as created_at_local
+            FROM notes_participants n
+            JOIN users u ON n.created_by = u.id
+            WHERE n.user_id = :id
+            ORDER BY n.created_at DESC
+        ";
+        
+        $stmt = $db->prepare($query);
+        $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+        $result = $stmt->execute();
+        
+        $notes = [];
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $notes[] = $row;
+        }
+        
+        // Ajouter les statistiques
+        $participant['total_reservations'] = count($reservations);
+        $participant['derniere_reservation'] = count($reservations) > 0 ? $reservations[0]['date'] : null;
+        $participant['reservations'] = $reservations;
+        $participant['notes'] = $notes;
+        $participant['created_at_formatted'] = date('j F Y', strtotime($participant['created_at']));
+        
+        echo json_encode($participant);
+        exit;
+        
+    } catch (Exception $e) {
+        error_log("PARTICIPANTS/DETAILS ERROR: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Erreur serveur : ' . $e->getMessage()]);
         exit;
     }
-    
-    // Récupérer les réservations
-    $stmt = $db->prepare('SELECT * FROM reservations WHERE user_id = :id ORDER BY date DESC');
-    $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-    $result = $stmt->execute();
-    $reservations = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $reservations[] = $row;
-    }
-    
-    // Récupérer les notes
-    $query = "
-        SELECT n.*, u.nom, u.prenom 
-        FROM notes_participants n
-        JOIN users u ON n.created_by = u.id
-        WHERE n.user_id = :id
-        ORDER BY n.created_at DESC
-    ";
-    $stmt = $db->prepare($query);
-    $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-    $result = $stmt->execute();
-    $notes = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $notes[] = $row;
-    }
-    
-    $participant['reservations'] = $reservations;
-    $participant['notes'] = $notes;
-    
-    echo json_encode($participant);
-    exit;
 }
 
 // AJOUTER UNE NOTE
