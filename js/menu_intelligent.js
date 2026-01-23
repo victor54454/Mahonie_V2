@@ -1,17 +1,23 @@
 // ========================================
-// Menu intelligent - Affichage selon la connexion
+// Menu intelligent - OPTION 1: Deux liens pour admins
 // ========================================
 
-console.log('🎯 Chargement du menu intelligent...');
+console.log('🎯 Menu intelligent - Option 1 (deux liens admin)');
 
 // Fonction pour vérifier si l'utilisateur est connecté
 function isUserConnected() {
     const userData = localStorage.getItem('admin_user') || localStorage.getItem('user');
-    if (!userData) return null;
+    if (!userData) {
+        console.log('❌ Aucune donnée utilisateur trouvée');
+        return null;
+    }
     
     try {
-        return JSON.parse(userData);
+        const user = JSON.parse(userData);
+        console.log('✅ Utilisateur trouvé:', user.prenom, user.email, 'Role:', user.role);
+        return user;
     } catch (error) {
+        console.error('❌ Erreur parsing user data:', error);
         return null;
     }
 }
@@ -21,38 +27,82 @@ function updateNavigationMenu() {
     const user = isUserConnected();
     
     // Chercher les éléments du menu
-    const loginLink = document.querySelector('a[href*="login"], a[href*="Login"]');
-    const inscriptionLink = document.querySelector('a[href*="inscription"], a[href*="Inscription"]');
+    const loginLink = document.querySelector('a[href*="login"]');
+    const inscriptionLink = document.querySelector('a[href*="register"], a[href*="inscription"]');
     
-    if (user) {
-        console.log('✅ Utilisateur connecté - Adaptation du menu');
+    console.log('🔍 Éléments menu trouvés:', {
+        login: loginLink ? 'OUI' : 'NON',
+        inscription: inscriptionLink ? 'OUI' : 'NON'
+    });
+    
+    if (user && user.email) {
+        // UTILISATEUR CONNECTÉ - Transformer le menu
+        console.log('👤 Utilisateur connecté - Transformation du menu');
         
-        // UTILISATEUR CONNECTÉ → Remplacer par "Compte"
-        if (loginLink) {
+        if (loginLink && user.role === 'admin') {
+            // ADMIN - Créer deux liens séparés
+            const userName = user.prenom || 'Admin';
+            
+            // 1. Transformer Login en Panel Admin
+            loginLink.innerHTML = '📊 Panel Admin';
+            loginLink.href = 'admin.html';
+            loginLink.title = `Interface d'administration`;
+            
+            // 2. Créer le lien Compte après
+            const compteLink = document.createElement('a');
+            compteLink.href = 'account.html';
+            compteLink.innerHTML = '👑 Compte';
+            compteLink.title = `Profil personnel - ${userName}`;
+            
+            // Copier les styles du lien original
+            compteLink.className = loginLink.className;
+            compteLink.style.cssText = loginLink.style.cssText;
+            compteLink.style.marginLeft = '20px';
+            
+            // Insérer après le lien Panel Admin
+            loginLink.parentNode.insertBefore(compteLink, loginLink.nextSibling);
+            
+            console.log(`✅ Menu admin configuré: Panel Admin + Compte pour ${userName}`);
+            
+        } else if (loginLink && user.role === 'client') {
+            // CLIENT - Un seul lien Compte
+            const userName = user.prenom || 'Utilisateur';
+            
             loginLink.innerHTML = '👤 Compte';
-            loginLink.href = 'compte.html'; // Page de profil
-            loginLink.title = `Connecté en tant que ${user.prenom || 'Utilisateur'}`;
+            loginLink.href = 'account.html';
+            loginLink.title = `Connecté en tant que ${userName} (Client)`;
+            
+            console.log(`✅ Menu client configuré: Compte pour ${userName}`);
         }
         
-        // Cacher l'inscription
+        // Cacher inscription
         if (inscriptionLink) {
             inscriptionLink.style.display = 'none';
+            console.log('✅ Inscription masquée');
         }
         
-        // Ajouter une indication discrète dans le menu
+        // Ajouter indicateur discret
         addUserIndicator(user);
         
     } else {
-        console.log('❌ Utilisateur non connecté - Menu standard');
+        // UTILISATEUR NON CONNECTÉ - Menu normal
+        console.log('❌ Utilisateur non connecté - Menu standard conservé');
         
-        // UTILISATEUR NON CONNECTÉ → Menu standard
-        if (loginLink) {
-            loginLink.innerHTML = 'Login';
-            loginLink.href = 'login.html';
+        // Nettoyer les liens ajoutés précédemment
+        const existingCompteLink = document.querySelector('a[href="account.html"]');
+        if (existingCompteLink && existingCompteLink.innerHTML === '👑 Compte') {
+            existingCompteLink.remove();
         }
         
+        // Supprimer l'indicateur si présent
+        const existingIndicator = document.getElementById('user-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
+        // Réafficher inscription
         if (inscriptionLink) {
-            inscriptionLink.style.display = 'inline-block';
+            inscriptionLink.style.display = '';
         }
     }
 }
@@ -65,54 +115,65 @@ function addUserIndicator(user) {
         existingIndicator.remove();
     }
     
-    // Chercher la nav ou le header
-    const nav = document.querySelector('nav, .navbar, header');
-    if (nav) {
-        const indicator = document.createElement('div');
-        indicator.id = 'user-indicator';
-        indicator.innerHTML = `
-            <div style="
-                position: absolute;
-                top: 10px;
-                right: 20px;
-                background: rgba(76, 175, 80, 0.9);
-                color: white;
-                padding: 5px 10px;
-                border-radius: 15px;
-                font-size: 12px;
-                z-index: 1000;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            ">
-                ✓ ${user.prenom || 'Connecté'}
-            </div>
-        `;
-        nav.appendChild(indicator);
+    const indicator = document.createElement('div');
+    indicator.id = 'user-indicator';
+    
+    const roleIcon = user.role === 'admin' ? '👑' : '✅';
+    const userName = user.prenom || 'Connecté';
+    
+    indicator.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 9999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.2);
+        ">
+            ${roleIcon} ${userName}
+        </div>
+    `;
+    
+    document.body.appendChild(indicator);
+    console.log(`✅ Indicateur affiché pour ${userName} (${user.role})`);
+}
+
+// Fonction de déconnexion
+function logout() {
+    if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_token');
+        
+        console.log('🚪 Déconnexion effectuée');
+        window.location.href = 'index.html';
     }
 }
 
-// Fonction pour déconnexion (à appeler depuis le menu Compte)
-function logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('admin_user');
-    localStorage.removeItem('admin_token');
-    
-    // Recharger la page pour réinitialiser le menu
-    window.location.reload();
-}
-
-// Démarrage automatique
+// Démarrage sécurisé
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 Page chargée - Mise à jour du menu...');
+    console.log('📄 Page chargée - Initialisation menu intelligent...');
     
-    // Attendre un peu que le menu soit chargé
-    setTimeout(updateNavigationMenu, 100);
-    
-    // Vérifier périodiquement (au cas où l'utilisateur se connecte/déconnecte)
-    setInterval(updateNavigationMenu, 5000);
+    // Attendre que le DOM soit complètement chargé
+    setTimeout(() => {
+        updateNavigationMenu();
+        
+        // Vérifier périodiquement les changements de connexion
+        setInterval(() => {
+            updateNavigationMenu();
+        }, 5000);
+        
+    }, 300);
 });
 
-// Fonction utilitaire pour autres pages
+// Fonctions globales
 window.updateMenu = updateNavigationMenu;
 window.logout = logout;
 
-console.log('🎯 Menu intelligent initialisé !');
+console.log('🎯 Menu intelligent Option 1 initialisé !');

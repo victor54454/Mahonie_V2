@@ -6,7 +6,7 @@ class PhotoSlider {
         this.images = [];
         this.currentIndex = 0;
         this.slideInterval = null;
-        this.slideDuration = 2000; // 2 secondes par image (plus lent pour debug)
+        this.slideDuration = 3000; // 2 secondes par image (plus lent pour debug)
         this.initialized = false;
         
         console.log('📸 Constructeur PhotoSlider appelé');
