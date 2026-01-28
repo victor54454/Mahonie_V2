@@ -136,18 +136,27 @@ if (bookingForm) {
     bookingForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        console.log('🎯 Formulaire soumis, validation étape 3...');
+        
         if (!await validateStep(3)) {
+            console.log('❌ Validation étape 3 échouée');
             return;
         }
+
+        console.log('✅ Validation étape 3 réussie');
 
         // Vérifier une dernière fois la disponibilité
         const date = document.getElementById('bookingDate').value;
         const time = document.querySelector('input[name="time"]:checked')?.value;
         
+        console.log('🔍 Vérification disponibilité finale...');
         const available = await checkAvailability(date, time);
         if (!available) {
+            console.log('❌ Créneau non disponible');
             return;
         }
+
+        console.log('✅ Créneau disponible');
 
         // Show loading state
         const submitButton = bookingForm.querySelector('button[type="submit"]');
@@ -158,28 +167,43 @@ if (bookingForm) {
         // Prepare form data
         const formData = new FormData(bookingForm);
 
+        // DEBUG: Afficher toutes les données du formulaire
+        console.log('📋 DONNÉES DU FORMULAIRE :');
+        for (let [key, value] of formData.entries()) {
+            console.log(`  ${key}: ${value}`);
+        }
+
         // Send to PHP backend
+        console.log('🚀 Envoi vers php/booking.php...');
         fetch('php/booking.php', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('📡 Réponse reçue:', response.status, response.statusText);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('✅ Réponse serveur:', data);
+            
             if (data.success) {
-                // Show confirmation step
+                console.log('🎉 Réservation réussie !');
                 showStep(4);
             } else {
-                // Show error
-                alert('Une erreur est survenue. Veuillez réessayer ou nous contacter directement.');
+                console.log('❌ Réservation échouée:', data.message);
+                alert('❌ Erreur : ' + (data.message || 'Une erreur est survenue'));
                 submitButton.innerHTML = originalText;
                 submitButton.disabled = false;
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            // Even if there's an error, show confirmation for demo
-            // In production, you would handle this properly
-            showStep(4);
+            console.error('❌ ERREUR FETCH:', error);
+            alert('❌ Impossible d\'envoyer la réservation. Vérifiez votre connexion et réessayez.');
+            submitButton.innerHTML = originalText;
+            submitButton.disabled = false;
         });
     });
 

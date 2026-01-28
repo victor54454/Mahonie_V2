@@ -15,6 +15,9 @@ RUN mkdir -p /var/www/html/bookings \
     && chown -R www-data:www-data /var/www/html/bookings \
     && chmod -R 777 /var/www/html/bookings
 
+# Add test suite script
+RUN chmod +x /var/www/html/test-suite.sh
+
 # Expose port 80
 EXPOSE 80
 

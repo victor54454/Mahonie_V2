@@ -9,15 +9,47 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 require_once 'database.php';
 require_once 'config.php';
-require_once 'PHPMailer-7.0.2/src/Exception.php';
-require_once 'PHPMailer-7.0.2/src/PHPMailer.php';
-require_once 'PHPMailer-7.0.2/src/SMTP.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
 // CORRECTION TIMEZONE - AJOUT
 date_default_timezone_set('Europe/Paris');
+
+// ==================== FONCTION ENVOI EMAIL BREVO ====================
+function sendBrevoEmail($to_email, $to_name, $subject, $html_body) {
+    $api_url = 'https://api.brevo.com/v3/smtp/email';
+    
+    $email_data = [
+        'sender' => [
+            'name' => 'Planckeel Bike',
+            'email' => SENDER_EMAIL
+        ],
+        'to' => [
+            [
+                'email' => $to_email,
+                'name' => $to_name
+            ]
+        ],
+        'subject' => $subject,
+        'htmlContent' => $html_body
+    ];
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $api_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($email_data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'api-key: ' . BREVO_API_KEY
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    curl_close($ch);
+    
+    return $http_code == 201;
+}
 
 // Initialiser la base de données
 $database = new Database();
@@ -248,40 +280,22 @@ if ($path === 'forgot-password' && $method === 'POST') {
     $stmt->bindValue(':expires_at', $expires, SQLITE3_TEXT);
     $stmt->execute();
     
-    // Envoyer l'email de réinitialisation
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host = SMTP_HOST;
-        $mail->SMTPAuth = true;
-        $mail->Username = SMTP_USER;
-        $mail->Password = SMTP_PASS;
-        $mail->SMTPSecure = SMTP_SECURE;
-        $mail->Port = SMTP_PORT;
-        $mail->CharSet = 'UTF-8';
-        
-        $mail->setFrom(SMTP_USER, 'Planckeel Bike');
-        $mail->addAddress($email);
-        
-        $resetLink = "http://localhost:8000/reset-password.html?token=" . $token;
-        
-        $mail->isHTML(true);
-        $mail->Subject = 'Réinitialisation de votre mot de passe - Planckeel Bike';
-        $mail->Body = "
-            <h2>Réinitialisation de mot de passe</h2>
-            <p>Bonjour {$user['prenom']},</p>
-            <p>Vous avez demandé une réinitialisation de votre mot de passe.</p>
-            <p>Cliquez sur le lien ci-dessous pour créer un nouveau mot de passe :</p>
-            <p><a href='{$resetLink}' style='background: #FF6B2C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px;'>Réinitialiser mon mot de passe</a></p>
-            <p>Ce lien est valide pendant 1 heure.</p>
-            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-        ";
-        
-        $mail->send();
-        
+    // Envoyer l'email de réinitialisation via Brevo
+    $resetLink = "http://localhost:8080/reset-password.html?token=" . $token;
+    
+    $htmlBody = "
+        <h2>Réinitialisation de mot de passe</h2>
+        <p>Bonjour {$user['prenom']},</p>
+        <p>Vous avez demandé une réinitialisation de votre mot de passe.</p>
+        <p>Cliquez sur le lien ci-dessous pour créer un nouveau mot de passe :</p>
+        <p><a href='{$resetLink}' style='background: #FF6B2C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px;'>Réinitialiser mon mot de passe</a></p>
+        <p>Ce lien est valide pendant 1 heure.</p>
+        <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+    ";
+    
+    if (sendBrevoEmail($email, $user['prenom'], 'Réinitialisation de votre mot de passe - Planckeel Bike', $htmlBody)) {
         echo json_encode(['success' => true, 'message' => 'Email de réinitialisation envoyé']);
-    } catch (Exception $e) {
-        error_log("Erreur envoi email: " . $e->getMessage());
+    } else {
         http_response_code(500);
         echo json_encode(['error' => 'Erreur lors de l\'envoi de l\'email']);
     }
@@ -404,45 +418,25 @@ if ($path === 'reservations/confirm' && $method === 'POST') {
     $stmt = $db->prepare('UPDATE reservations SET status = "confirmee" WHERE id = :id');
     $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
     $stmt->execute();
+
+    // Envoyer un email de confirmation via Brevo
+    $htmlBody = "
+        <h2>Réservation confirmée ✅</h2>
+        <p>Bonjour {$reservation['prenom']} {$reservation['nom']},</p>
+        <p>Nous avons le plaisir de vous confirmer votre réservation :</p>
+        <div style='background: #f5f5f5; padding: 20px; margin: 20px 0; border-left: 4px solid #FF6B2C;'>
+            <p><strong>Service :</strong> {$reservation['service']}</p>
+            <p><strong>Date :</strong> {$reservation['date']}</p>
+            <p><strong>Heure :</strong> {$reservation['time']}</p>
+            <p><strong>Durée :</strong> {$reservation['duration']}</p>
+            <p><strong>Prix :</strong> {$reservation['price']}</p>
+        </div>
+        <p>Nous avons hâte de vous retrouver ! N'hésitez pas à nous contacter si vous avez des questions.</p>
+        <br>
+        <p>Sportivement,<br>L'équipe Planckeel Bike</p>
+    ";
     
-    // Envoyer un email de confirmation
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host = SMTP_HOST;
-        $mail->SMTPAuth = true;
-        $mail->Username = SMTP_USER;
-        $mail->Password = SMTP_PASS;
-        $mail->SMTPSecure = SMTP_SECURE;
-        $mail->Port = SMTP_PORT;
-        $mail->CharSet = 'UTF-8';
-        
-        $mail->setFrom(SMTP_USER, 'Planckeel Bike');
-        $mail->addAddress($reservation['email']);
-        
-        $mail->isHTML(true);
-        $mail->Subject = 'Confirmation de votre réservation - Planckeel Bike';
-        $mail->Body = "
-            <h2>Réservation confirmée ✅</h2>
-            <p>Bonjour {$reservation['prenom']} {$reservation['nom']},</p>
-            <p>Nous avons le plaisir de vous confirmer votre réservation :</p>
-            <div style='background: #f5f5f5; padding: 20px; margin: 20px 0; border-left: 4px solid #FF6B2C;'>
-                <p><strong>Service :</strong> {$reservation['service']}</p>
-                <p><strong>Date :</strong> {$reservation['date']}</p>
-                <p><strong>Heure :</strong> {$reservation['time']}</p>
-                <p><strong>Durée :</strong> {$reservation['duration']}</p>
-                <p><strong>Prix :</strong> {$reservation['price']}</p>
-            </div>
-            <p>Nous avons hâte de vous retrouver ! N'hésitez pas à nous contacter si vous avez des questions.</p>
-            <br>
-            <p>Sportivement,<br>L'équipe Planckeel Bike</p>
-        ";
-        
-        $mail->send();
-    } catch (Exception $e) {
-        // Log l'erreur mais ne bloque pas
-        error_log("Erreur envoi email: " . $e->getMessage());
-    }
+    sendBrevoEmail($reservation['email'], $reservation['prenom'], 'Confirmation de votre réservation - Planckeel Bike', $htmlBody);
     
     echo json_encode(['success' => true, 'message' => 'Réservation confirmée et email envoyé']);
     exit;
@@ -479,44 +473,23 @@ if ($path === 'reservations/cancel' && $method === 'POST') {
     $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
     $stmt->execute();
     
-    // Envoyer un email d'annulation
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host = SMTP_HOST;
-        $mail->SMTPAuth = true;
-        $mail->Username = SMTP_USER;
-        $mail->Password = SMTP_PASS;
-        $mail->SMTPSecure = SMTP_SECURE;
-        $mail->Port = SMTP_PORT;
-        $mail->CharSet = 'UTF-8';
-        
-        $mail->setFrom(SMTP_USER, 'Planckeel Bike');
-        $mail->addAddress($reservation['email']);
-        
-        $mail->isHTML(true);
-        $mail->Subject = 'Annulation de votre réservation - Planckeel Bike';
-        $mail->Body = "
-            <h2>Annulation de réservation ❌</h2>
-            <p>Bonjour {$reservation['prenom']} {$reservation['nom']},</p>
-            <p>Nous sommes désolés de vous informer que votre réservation a été annulée :</p>
-            <div style='background: #f5f5f5; padding: 20px; margin: 20px 0; border-left: 4px solid #ff4444;'>
-                <p><strong>Service :</strong> {$reservation['service']}</p>
-                <p><strong>Date :</strong> {$reservation['date']}</p>
-                <p><strong>Heure :</strong> {$reservation['time']}</p>
-            </div>
-            <p>Nous vous invitons à reprendre rendez-vous à une autre date qui vous conviendrait mieux.</p>
-            <p><a href='http://localhost:8000/booking.html' style='background: #FF6B2C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;'>Reprendre rendez-vous</a></p>
-            <p>Nous nous excusons pour la gêne occasionnée.</p>
-            <br>
-            <p>Cordialement,<br>L'équipe Planckeel Bike</p>
-        ";
-        
-        $mail->send();
-    } catch (Exception $e) {
-        // Log l'erreur mais ne bloque pas
-        error_log("Erreur envoi email: " . $e->getMessage());
-    }
+    // Envoyer un email d'annulation via Brevo
+    $html_body = "
+        <h2>Annulation de réservation ❌</h2>
+        <p>Bonjour {$reservation['prenom']} {$reservation['nom']},</p>
+        <p>Nous sommes désolés de vous informer que votre réservation a été annulée :</p>
+        <div style='background: #f5f5f5; padding: 20px; margin: 20px 0; border-left: 4px solid #ff4444;'>
+            <p><strong>Service :</strong> {$reservation['service']}</p>
+            <p><strong>Date :</strong> {$reservation['date']}</p>
+            <p><strong>Heure :</strong> {$reservation['time']}</p>
+        </div>
+        <p>Nous vous invitons à reprendre rendez-vous à une autre date qui vous conviendrait mieux.</p>
+        <p><a href='http://localhost:8000/booking.html' style='background: #FF6B2C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;'>Reprendre rendez-vous</a></p>
+        <p>Nous nous excusons pour la gêne occasionnée.</p>
+        <br>
+        <p>Cordialement,<br>L'équipe Planckeel Bike</p>
+    ";
+    sendBrevoEmail($reservation['email'], $reservation['prenom'] . ' ' . $reservation['nom'], 'Annulation de votre réservation - Planckeel Bike', $html_body);
     
     echo json_encode(['success' => true, 'message' => 'Réservation annulée et email envoyé']);
     exit;

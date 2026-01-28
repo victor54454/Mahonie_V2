@@ -1,24 +1,29 @@
 <?php
 // ========================================
-// Booking Handler - Version corrigée avec base SQLite
+// Gérer CORS et OPTIONS
 // ========================================
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: *');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 header('Content-Type: application/json; charset=utf-8');
-require_once 'config.php';
-require_once 'database.php'; // ← AJOUT : Base SQLite
-require_once 'PHPMailer-7.0.2/src/Exception.php';
-require_once 'PHPMailer-7.0.2/src/PHPMailer.php';
-require_once 'PHPMailer-7.0.2/src/SMTP.php';
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+// Debug mode
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', '/tmp/php_booking_errors.log');
+
+require_once 'config.php';
+require_once 'database.php';
 
 // Only handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // ========================================
-    // Collect and sanitize form data
-    // ========================================
+    try {
     $service = htmlspecialchars($_POST['service'] ?? '');
     $date = htmlspecialchars($_POST['date'] ?? '');
     $time = htmlspecialchars($_POST['time'] ?? '');
@@ -50,10 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Format date
     $dateObj = DateTime::createFromFormat('Y-m-d', $date);
     $formattedDate = $dateObj ? $dateObj->format('d/m/Y') : $date;
-    $dayName = $dateObj ? strftime('%A', $dateObj->getTimestamp()) : '';
+    // Get day name using strtotime + date (avoids deprecated strftime)
+    $timestamp = strtotime($date);
+    $dayName = $timestamp ? date('l', $timestamp) : 'Jour inconnu';
 
     // ========================================
-    // NOUVEAU : Sauvegarder dans la base SQLite
+    // Sauvegarder dans la base SQLite
     // ========================================
     $database = new Database();
     $db = $database->getConnection();
@@ -80,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES (:email, :password, :nom, :prenom, :telephone, "client")
             ');
             $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-            $stmt->bindValue(':password', password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT), SQLITE3_TEXT); // Mot de passe temporaire
+            $stmt->bindValue(':password', password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT), SQLITE3_TEXT);
             $stmt->bindValue(':nom', $nom, SQLITE3_TEXT);
             $stmt->bindValue(':prenom', $prenom, SQLITE3_TEXT);
             $stmt->bindValue(':telephone', $phone, SQLITE3_TEXT);
@@ -96,18 +103,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ');
         $stmt->bindValue(':user_id', $user_id, SQLITE3_INTEGER);
         $stmt->bindValue(':service', $service, SQLITE3_TEXT);
-        $stmt->bindValue(':date', $date, SQLITE3_TEXT); // Format Y-m-d pour la base
+        $stmt->bindValue(':date', $date, SQLITE3_TEXT);
         $stmt->bindValue(':time', $time, SQLITE3_TEXT);
         $stmt->bindValue(':duration', $duration, SQLITE3_TEXT);
         $stmt->bindValue(':price', $price, SQLITE3_TEXT);
-        $stmt->bindValue(':status', 'en_attente', SQLITE3_TEXT); // Statut par défaut
+        $stmt->bindValue(':status', 'en_attente', SQLITE3_TEXT);
         $stmt->execute();
         
         $reservation_id = $db->lastInsertRowID();
         
     } catch (Exception $e) {
         error_log("Erreur sauvegarde base de données : " . $e->getMessage());
-        // On continue même si la sauvegarde base échoue
     }
 
     // ========================================
@@ -280,76 +286,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ";
 
     // ========================================
-    // Send Emails with PHPMailer
+    // Send Emails with Brevo API REST
     // ========================================
     $clientSent = false;
     $adminSent = false;
     $emailError = '';
 
-    try {
-        // ========================================
-        // Email to Client
-        // ========================================
-        $mailClient = new PHPMailer(true);
+    // Fonction pour envoyer un email via Brevo API
+    function sendBrevoEmail($to_email, $to_name, $subject, $html_body) {
+        $api_url = 'https://api.brevo.com/v3/smtp/email';
         
-        // Server settings
-        $mailClient->isSMTP();
-        $mailClient->Host       = SMTP_HOST;
-        $mailClient->SMTPAuth   = true;
-        $mailClient->Username   = SMTP_USER;
-        $mailClient->Password   = SMTP_PASS;
-        $mailClient->SMTPSecure = SMTP_SECURE;
-        $mailClient->Port       = SMTP_PORT;
+        $email_data = [
+            'sender' => [
+                'name' => 'Planckeel Bike',
+                'email' => SENDER_EMAIL
+            ],
+            'to' => [
+                [
+                    'email' => $to_email,
+                    'name' => $to_name
+                ]
+            ],
+            'subject' => $subject,
+            'htmlContent' => $html_body
+        ];
         
-        // Recipients
-        $mailClient->setFrom(SMTP_USER, 'Planckeel Bike');
-        $mailClient->addAddress($email, $name);
-        $mailClient->addReplyTo(SMTP_USER, 'Planckeel Bike');
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($email_data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'api-key: ' . BREVO_API_KEY
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         
-        // Content
-        $mailClient->isHTML(true);
-        $mailClient->Subject = $clientSubject;
-        $mailClient->Body    = $clientMessage;
-        $mailClient->CharSet = 'UTF-8';
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
         
-        $mailClient->send();
-        $clientSent = true;
-        
-    } catch (Exception $e) {
-        $emailError .= "Client email error: " . $e->getMessage() . " ";
+        if ($http_code == 201) {
+            return ['success' => true];
+        } else {
+            return ['success' => false, 'error' => "HTTP $http_code"];
+        }
     }
 
-    try {
-        // ========================================
-        // Email to Admin
-        // ========================================
-        $mailAdmin = new PHPMailer(true);
-        
-        // Server settings
-        $mailAdmin->isSMTP();
-        $mailAdmin->Host       = SMTP_HOST;
-        $mailAdmin->SMTPAuth   = true;
-        $mailAdmin->Username   = SMTP_USER;
-        $mailAdmin->Password   = SMTP_PASS;
-        $mailAdmin->SMTPSecure = SMTP_SECURE;
-        $mailAdmin->Port       = SMTP_PORT;
-        
-        // Recipients
-        $mailAdmin->setFrom(SMTP_USER, 'Planckeel Bike - Réservation');
-        $mailAdmin->addAddress(ADMIN_EMAIL, 'Admin Planckeel');
-        $mailAdmin->addReplyTo($email, $name);
-        
-        // Content
-        $mailAdmin->isHTML(true);
-        $mailAdmin->Subject = $adminSubject;
-        $mailAdmin->Body    = $adminMessage;
-        $mailAdmin->CharSet = 'UTF-8';
-        
-        $mailAdmin->send();
+    // Email au client
+    $result = sendBrevoEmail($email, $name, $clientSubject, $clientMessage);
+    if ($result['success']) {
+        $clientSent = true;
+    } else {
+        $emailError .= "Client: " . $result['error'] . " ";
+    }
+
+    // Email à l'admin
+    $result = sendBrevoEmail(ADMIN_EMAIL, 'Admin Planckeel', $adminSubject, $adminMessage);
+    if ($result['success']) {
         $adminSent = true;
-        
-    } catch (Exception $e) {
-        $emailError .= "Admin email error: " . $e->getMessage() . " ";
+    } else {
+        $emailError .= "Admin: " . $result['error'] . " ";
     }
 
     // ========================================
@@ -390,14 +388,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'reservation_id' => $reservation_id,
         'client_email_sent' => $clientSent,
         'admin_email_sent' => $adminSent,
-        'saved_to_database' => ($reservation_id !== null),
-        'debug_info' => [
-            'smtp_host' => SMTP_HOST,
-            'smtp_user' => SMTP_USER,
-            'admin_email' => ADMIN_EMAIL,
-            'error' => $emailError
-        ]
+        'saved_to_database' => ($reservation_id !== null)
     ]);
+    } catch (Exception $e) {
+        error_log("BOOKING ERROR: " . $e->getMessage() . " | Trace: " . $e->getTraceAsString());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Erreur lors du traitement : ' . $e->getMessage(),
+            'error_debug' => $e->getMessage()
+        ]);
+    }
     
 } else {
     echo json_encode([
